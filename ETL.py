@@ -92,9 +92,22 @@ def clean_json():
 
 #############################
 
+# create dataframe without tech skills, strengths, and weaknesses from the dataframe
+
+    the_cols = df.columns.tolist()
+
+    print(the_cols)
+
+    the_cols.pop(the_cols.index('tech_self_score'))
+    the_cols.pop(the_cols.index('strengths'))
+    the_cols.pop(the_cols.index('weaknesses'))
+
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/df.csv', Body=df.to_csv())
 
 
-    # CSV files into one file
+
+# CSV files into one file
 
 
 
