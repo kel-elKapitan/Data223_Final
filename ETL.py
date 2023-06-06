@@ -28,6 +28,24 @@ def many2one_json():
     s3 = boto3.client('s3')
     s3.put_object(Bucket = 'data-eng-223-final-project', Key='ONE_BIG_JSON.json', Body=json.dumps(big_one))
 
+# read in json file and convert to dataframe
+def json2df():
+    import pandas as pd
+    import boto3
+    import json
+
+    s3 = boto3.resource('s3')
+    obj = s3.Object('data-eng-223-final-project', 'ONE_BIG_JSON.json')
+    body = obj.get()['Body'].read()
+    json_data = json.loads(body)
+    df = pd.DataFrame(json_data)
+    return df
+
+
+
+
+
+
 
 # CSV files into one file
 
