@@ -65,8 +65,11 @@ def clean_json():
     # fill all nan values with 0
     tech_skills = tech_skills.fillna(0)
 
-    s3 = boto3.client('s3')
-    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/tech_skills.csv', Body=tech_skills.to_csv())
+    # append skill_ to all column names
+    tech_skills.columns = ['skill_' + str(col) for col in tech_skills.columns]
+
+    # append to dataframe
+    df = df.join(tech_skills)
 
 #############################
 
@@ -96,14 +99,14 @@ def clean_json():
 
     the_cols = df.columns.tolist()
 
-    print(the_cols)
-
+    
+    # remove the columns that are not needed
     the_cols.pop(the_cols.index('tech_self_score'))
     the_cols.pop(the_cols.index('strengths'))
     the_cols.pop(the_cols.index('weaknesses'))
 
     s3 = boto3.client('s3')
-    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/df.csv', Body=df.to_csv())
+    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/JSON_data.csv', Body=df.to_csv())
 
 
 
