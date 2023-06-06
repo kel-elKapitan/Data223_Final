@@ -42,12 +42,59 @@ def json2df():
     return df
 
 
+# cleaning the json into normalised csv's
+def clean_json():
+    import pandas as pd
+    import boto3
+    import json
+
+    s3 = boto3.resource('s3')
+    obj = s3.Object('data-eng-223-final-project', 'ONE_BIG_JSON.json')
+    body = obj.get()['Body'].read()
+    json_data = json.loads(body)
+    df = pd.DataFrame(json_data)
+    #df = df.drop(columns=['_id', 'id'])
+
+    # create csv's
+    df = json2df()
+
+#############################
+    # tech_self_score column into seperate dataframe
+    tech_skills = df['tech_self_score'].apply(pd.Series)
+
+    # fill all nan values with 0
+    tech_skills = tech_skills.fillna(0)
+
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/tech_skills.csv', Body=tech_skills.to_csv())
+
+#############################
+
+    # extract the strengths from the json file#
+
+    the_strengths = df['strengths'].apply(lambda x: x[0:])
+    print(the_strengths)
+
+
+    the_strengths = pd.DataFrame(the_strengths)
+
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/strengths.csv', Body=the_strengths.to_csv())
+
+#############################
+    # extract the weaknesses from the json file
+
+    the_weaknesses = df['weaknesses'].apply(lambda x: x[0:])
+    print(the_weaknesses)
+
+    s3 = boto3.client('s3')
+    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/weaknesses.csv', Body=the_weaknesses.to_csv())
+
+#############################
 
 
 
-
-
-# CSV files into one file
+    # CSV files into one file
 
 
 
