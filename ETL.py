@@ -204,65 +204,78 @@ Business_df.head()
 
 ##################################################################################
 
-# This function combines CSV files and reformats the data to a normalised format
-# Still WIP needs to be edited to run from S3
-
 import pandas as pd
 import os
+import boto3
+from botocore.exceptions import NoCredentialsError
 
-def create_combined_csv(directory):
-
-    # This function combines local CSV files and reformats the data to a normalised format
+def create_combined_csv():
+    # This function combines CSV files from the S3 bucket and reformats the data to a normalized format
 
     # Initialize an empty DataFrame to store the combined data
     combined_df = pd.DataFrame()
 
-    # Iterate over the files in the directory
-    for file_name in os.listdir(directory):
-        if file_name.endswith('.csv'):
-            # Construct the full file path
-            file_path = os.path.join(directory, file_name)
+    # Connect to the S3 client
+    s3 = boto3.client('s3')
 
-            # Parse cohort and date from the file name
-            split_name = file_name.split('_')
-            cohort = split_name[0] + '_' + split_name[1]
-            date = split_name[2].split('.')[0]
+    try:
+        # List objects in the S3 bucket
+        response = s3.list_objects(Bucket='data-eng-223-final-project', Prefix='Academy/')
+        files = response['Contents']
 
-            # Read the CSV file
-            df = pd.read_csv(file_path)
+        # Iterate over the files in the bucket
+        for file in files:
+            file_name = file['Key']
+            if file_name.endswith('.csv'):
+                # Download the file from S3
+                s3.download_file('data-eng-223-final-project', file_name, '/tmp/temp.csv')
 
-            # Check for length of course
-            if 'Analytic_W10' in df.columns:
-                weeks = 11
-            elif 'Analytic_W9' in df.columns:
-                weeks = 10
-            else: 
-                weeks = 9        
+                # Parse cohort and date from the file name
+                split_name = file_name.split('_')
+                cohort = split_name[0] + '_' + split_name[1]
+                date = split_name[2].split('.')[0]
 
-            for week in range (1, weeks):
-                # Select the relevant columns for the current week
-                week_df = df[['name', 'trainer',
-                          f'Analytic_W{week}', f'Independent_W{week}',
-                          f'Determined_W{week}', f'Professional_W{week}',
-                          f'Studious_W{week}', f'Imaginative_W{week}']].copy()
+                # Read the CSV file
+                df = pd.read_csv('/tmp/temp.csv')
 
-                # Rename the columns
-                week_df.columns = ['name', 'trainer',
-                               'Analytic', 'Independent',
-                               'Determined', 'Professional',
-                               'Studious', 'Imaginative']
+                # Check for length of course
+                if 'Analytic_W10' in df.columns:
+                    weeks = 11
+                elif 'Analytic_W9' in df.columns:
+                    weeks = 10
+                else:
+                    weeks = 9
 
-                # Add a 'week' column
-                week_df['week'] = week
+                for week in range(1, weeks):
+                    # Select the relevant columns for the current week
+                    week_df = df[['name', 'trainer',
+                                  f'Analytic_W{week}', f'Independent_W{week}',
+                                  f'Determined_W{week}', f'Professional_W{week}',
+                                  f'Studious_W{week}', f'Imaginative_W{week}']].copy()
 
-                # Add a 'cohort' column
-                week_df['cohort'] = cohort
+                    # Rename the columns
+                    week_df.columns = ['name', 'trainer',
+                                       'Analytic', 'Independent',
+                                       'Determined', 'Professional',
+                                       'Studious', 'Imaginative']
 
-                # Add a 'date' column
-                week_df['date'] = date
+                    # Add a 'week' column
+                    week_df['week'] = week
 
-                # Append the current week DataFrame to the combined DataFrame
-                combined_df = pd.concat([combined_df, week_df], ignore_index=True)
+                    # Add a 'cohort' column
+                    week_df['cohort'] = cohort
+
+                    # Add a 'date' column
+                    week_df['date'] = date
+
+                    # Append the current week DataFrame to the combined DataFrame
+                    combined_df = pd.concat([combined_df, week_df], ignore_index=True)
+
+                # Remove the downloaded file
+                #os.remove(file_name)
+
+    except NoCredentialsError:
+        print("Credentials not found")
 
     # Remove rows with any missing values
     combined_df.dropna(inplace=True)
@@ -270,10 +283,7 @@ def create_combined_csv(directory):
     return combined_df
 
 
-# Define the path to the directory containing the CSV files
-directory = 'Sparta'
-
-df = create_combined_csv(directory)
+df = create_combined_csv()
 
 
 
