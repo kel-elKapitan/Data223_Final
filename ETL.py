@@ -108,9 +108,45 @@ def clean_json():
     s3 = boto3.client('s3')
     s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/JSON_data.csv', Body=df.to_csv())
 
+############################################################################
 
+# Converts the dataset to a more readable format
+# Creates a new column called 'Week' and transposes the data from columns to rows
 
-# CSV files into one file
+import pandas as pd
+
+def Transform_df(File):
+
+# Converts the dataset to a more readable format
+# Creates a new column called 'Week' and transposes the data from columns to rows
+
+    # Read csv file
+    df = pd.read_csv(File)
+
+    # Initialize an empty dataframe to store the reshaped data
+    reshaped_df = pd.DataFrame()
+
+    # Iterate over the unique weeks present in the column names
+    for week in range(1, 11):
+        # Select the relevant columns for the current week
+        week_df = df[['name', 'trainer',
+                  f'Analytic_W{week}', f'Independent_W{week}',
+                  f'Determined_W{week}', f'Professional_W{week}',
+                  f'Studious_W{week}', f'Imaginative_W{week}']].copy()
+
+        # Rename the columns
+        week_df.columns = ['name', 'trainer',
+                       'Analytic', 'Independent',
+                       'Determined', 'Professional',
+                       'Studious', 'Imaginative']
+    
+        # Add a 'week' column
+        week_df['Week'] = week
+
+        # Append the current week dataframe to the reshaped dataframe
+        reshaped_df = pd.concat([reshaped_df, week_df], ignore_index=True)
+
+    return reshaped_df
 
 ###############################################################
 
@@ -169,13 +205,14 @@ Business_df.head()
 ##################################################################################
 
 # This function combines CSV files and reformats the data to a normalised format
+# Still WIP needs to be edited to run from S3
 
 import pandas as pd
 import os
 
 def create_combined_csv(directory):
 
-    # This function combines CSV files and reformats the data to a normalised format
+    # This function combines local CSV files and reformats the data to a normalised format
 
     # Initialize an empty DataFrame to store the combined data
     combined_df = pd.DataFrame()
