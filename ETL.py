@@ -112,14 +112,63 @@ def clean_json():
 
 # CSV files into one file
 
+###############################################################
+
+# Converts Business CSV files to single pandas dataframe
+
+import boto3
+import os
+import csv
+
+# Connect to boto3
+s3_client = boto3.client('s3')
 
 
-# Create CSV from JSON
+def get_csv(Folder):
 
+    # Converts Business CSV files to single pandas dataframe 
 
+    # List to store the data from each CSV file
+    data = []
 
+    # List all objects in the "Academy" directory
+    response = s3_client.list_objects_v2(Bucket='data-eng-223-final-project', Prefix='Academy/')
 
-# 
+    # Iterate over each object in the directory
+    for obj in response['Contents']:
+        file_key = obj['Key']
+        if file_key.startswith(Folder):
+        
+            # Download the CSV file from S3
+            s3_client.download_file('data-eng-223-final-project', file_key, '/tmp/temp.csv')
+        
+            # Open the downloaded CSV file and read its contents
+            with open('/tmp/temp.csv', 'r') as csv_file:
+                csv_reader = csv.reader(csv_file)
+                header = next(csv_reader)  # Get the header row
+            
+                # Read the data row by row and append it to the data list
+                for row in csv_reader:
+                    data.append(row)
+
+            # Delete the temporary downloaded file
+            os.remove('/tmp/temp.csv')
+
+    # Create a DataFrame from the collected data
+    df = pd.DataFrame(data, columns=header)
+
+    # Return the DataFrame
+    return df 
+
+Folder = 'Academy/Business'
+
+Business_df = get_csv(Folder)
+
+Business_df.head()
+
+##################################################################################
+
+# This function combines CSV files and reformats the data to a normalised format
 
 import pandas as pd
 import os
