@@ -1,3 +1,9 @@
+# PLEASE READ FIRST
+
+# Not production ready yet
+# Need to add variation in for loop instead of (for week in range(1, 9))
+# Ideally conncectivity to S3
+
 def create_combined_csv(directory):
 
     # This function combines CSV files and reformats the data to a normalised format
