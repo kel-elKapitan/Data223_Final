@@ -64,7 +64,7 @@ def clean_json():
 
     # fill all nan values with 0
     tech_skills = tech_skills.fillna(0)
-
+    tech_skills = pd.DataFrame(tech_skills)
     # append skill_ to all column names
     tech_skills.columns = ['skill_' + str(col) for col in tech_skills.columns]
 
@@ -72,27 +72,40 @@ def clean_json():
     df = df.join(tech_skills)
 
 #############################
+    # extract the strengths from the json file
+    df5 = df.copy() 
 
-    # extract the strengths from the json file#
+    df5 = df5.explode("strengths")
 
-    the_strengths = df['strengths'].apply(lambda x: x[0:])
-    print(the_strengths)
+    df5 = df5['strengths'].str.get_dummies()
+
+    df5 = df5.groupby(level=0).sum()
 
 
-    the_strengths = pd.DataFrame(the_strengths)
+    # rename the columns with the prefix weakness_
+    df5.columns = ['strength_' + str(col) for col in df5.columns]
 
-    s3 = boto3.client('s3')
-    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/strengths.csv', Body=the_strengths.to_csv())
+    # append to dataframe
+    df = df.join(df5)
 
 #############################
     # extract the weaknesses from the json file
+    df6 = df.copy() 
 
-    the_weaknesses = df['weaknesses'].apply(lambda x: x[0:])
-    print(the_weaknesses)
+    df6 = df6.explode("weaknesses")
 
-    s3 = boto3.client('s3')
-    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/weaknesses.csv', Body=the_weaknesses.to_csv())
+    df6 = df6['weaknesses'].str.get_dummies()
 
+    df6 = df6.groupby(level=0).sum()
+    # rename the columns with the prefix weakness_
+    df6.columns = ['weakness_' + str(col) for col in df6.columns]
+
+    # append to dataframe
+    df = df.join(df6)
+    
+
+
+    
 #############################
 
 # create dataframe without tech skills, strengths, and weaknesses from the dataframe
@@ -104,9 +117,10 @@ def clean_json():
     the_cols.pop(the_cols.index('tech_self_score'))
     the_cols.pop(the_cols.index('strengths'))
     the_cols.pop(the_cols.index('weaknesses'))
-
+    df = df[the_cols]
+    
     s3 = boto3.client('s3')
-    s3.put_object(Bucket = 'data-eng-223-final-project', Key='normal/JSON_data.csv', Body=df.to_csv())
+    s3.put_object(Bucket = 'data-eng-223-final-project', Key='all_TALENT_files_cleaned.csv', Body=df.to_csv())
 
 
 
