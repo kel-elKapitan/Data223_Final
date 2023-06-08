@@ -73,30 +73,30 @@ def clean_json():
 
 #############################
     # extract the strengths and weaknesses from the json file
-def strengths_weaknesses(df, column_to_change):
+    def strengths_weaknesses(df, column_to_change):
 
-    df6 = df.copy() 
+        df6 = df.copy() 
 
-    df6 = df6.explode(column_to_change)
+        df6 = df6.explode(column_to_change)
 
-    df6 = df6[column_to_change].str.get_dummies()
+        df6 = df6[column_to_change].str.get_dummies()
 
-    df6 = df6.groupby(level=0).sum()
-    # rename the columns with the prefix weakness_
-    df6.columns = [column_to_change +'_' + str(col) for col in df6.columns]
+        df6 = df6.groupby(level=0).sum()
+        # rename the columns with the prefix weakness_
+        df6.columns = [column_to_change +'_' + str(col) for col in df6.columns]
 
-    # append to dataframe
-    df = df.join(df6)
+        # append to dataframe
+        df = df.join(df6)
 
-    return df
+        return df
 
-column_to_change = 'weaknesses'
+    column_to_change = 'weaknesses'
 
-df = strengths_weaknesses(df, column_to_change)
+    df = strengths_weaknesses(df, column_to_change)
 
-column_to_change = 'strengths'
+    column_to_change = 'strengths'
 
-df = strengths_weaknesses(df, column_to_change)
+    df = strengths_weaknesses(df, column_to_change)
     
    
 #############################
