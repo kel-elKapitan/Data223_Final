@@ -82,7 +82,7 @@ def clean_json():
     df5 = df5.groupby(level=0).sum()
 
 
-    # rename the columns with the prefix weakness_
+    # rename the columns with the prefix strength_
     df5.columns = ['strength_' + str(col) for col in df5.columns]
 
     # append to dataframe
